@@ -1,4 +1,5 @@
 QT += quick
+QT += quickcontrols2
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -16,6 +17,7 @@ SOURCES += \
         main.cpp
 
 RESOURCES += qml.qrc
+RESOURCES += images.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
@@ -27,3 +29,6 @@ QML_DESIGNER_IMPORT_PATH =
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    switch.png
