@@ -15,6 +15,19 @@ ApplicationWindow {
 
     color: "lightgrey"
 
+    Dialog {
+        id: time_up_dialog
+        modal: true
+        visible: false
+        width: 300; height: 200
+
+        Text {
+            id: text
+            text: qsTr("Time up!")
+            anchors.centerIn: parent
+        }
+    }
+
     Text {
         id: work_label
         font.pointSize: 24
@@ -35,6 +48,9 @@ ApplicationWindow {
 
         property int totalSeconds
         property int accruedSeconds
+        property int restSeconds
+
+        property alias ratio: ratio_selector.chosen_ratio
 
         Timer {
             id: clock_tick
@@ -44,11 +60,51 @@ ApplicationWindow {
             repeat: true
 
             onTriggered: {
-                work_timer.totalSeconds++
-                work_timer.accruedSeconds++
-                console.log("Clock ticked! Total seconds: " + work_timer.totalSeconds)
+                if(work_timer.state == "Working")
+                {
+                    work_timer.totalSeconds++
+                    work_timer.accruedSeconds++
+                    work_timer.restSeconds = Math.floor(work_timer.accruedSeconds * work_timer.ratio)
 
-               work_timer.text = TimeFormatting.timeFormatting(work_timer.totalSeconds)
+                    console.log("Clock ticked while working! Total seconds: " + work_timer.totalSeconds)
+
+                    work_timer.text = TimeFormatting.timeFormatting(work_timer.totalSeconds)
+                    rest_timer.text = TimeFormatting.timeFormatting(work_timer.restSeconds)
+                }
+                else
+                {
+                    work_timer.restSeconds--
+                    console.log("Clock ticked while resting! Accrued seconds left: " + work_timer.restSeconds)
+
+                    rest_timer.text = TimeFormatting.timeFormatting(work_timer.restSeconds)
+
+                    if(work_timer.restSeconds <= 0)
+                    {
+                        console.log("Time up!")
+                        work_timer.state = "Working"
+                    }
+                }
+            }
+        }
+
+        states: [
+            State {
+                id: working_state
+                name: "Working"
+            },
+            State {
+                id: resting_state
+                name: "Resting"
+            }
+        ]
+
+        state: "Working"
+
+        onStateChanged: {
+            if(state == "Working")
+            {
+                // backfill accruedSeconds with the appropriate amount of seconds it would take to accrue the remaining restSeconds
+                accruedSeconds = Math.ceil(1 / ratio * restSeconds)
             }
         }
     }
@@ -94,6 +150,8 @@ ApplicationWindow {
         anchors.top: rest_timer.bottom
         anchors.horizontalCenter: rest_timer.horizontalCenter
 
+        property double chosen_ratio: 1
+
         model: ListModel {
             id: ratio_list
             ListElement { text: "1/1" }
@@ -107,6 +165,9 @@ ApplicationWindow {
         }
         onCurrentIndexChanged: {
             console.log("Ratio changed to " + ratio_list.get(currentIndex).text)
+            // Yes, I know this is *technically* dangerous. However, in this context, I don't see how this can be abused outside of the user creating their own list elements.
+            // And even then, this command is only going to run on their machine. Whatever malicious things they may be able to do here will be self-inflicted.
+            chosen_ratio = eval("1 / (" + ratio_list.get(currentIndex).text + ")")
         }
     }
 
@@ -121,12 +182,20 @@ ApplicationWindow {
         font.family: "Material Design Icons"
         font.pixelSize: 24
 
-        onPressed: console.log("Switch Button Pressed!")
+        onPressed: {
+            if(work_timer.state == "Working")
+            {
+                work_timer.state = "Resting"
+            }
+            else
+            {
+                work_timer.state = "Working"
+            }
+
+        }
         text: MdiFont.Icon.cached
-//        icon.source: "images/switch.png"
-//        icon.color: "black"
-//        display: AbstractButton.IconOnly
         opacity: 0.80
+
     }
 
     RoundButton {
@@ -158,6 +227,7 @@ ApplicationWindow {
 
         states: [
             State {
+                id: playing_state
                 name: "Playing"
                 PropertyChanges {
                     target: pause_button
@@ -165,6 +235,7 @@ ApplicationWindow {
                 }
             },
             State {
+                id: paused_state
                 name: "Paused"
                 PropertyChanges {
                     target: pause_button
