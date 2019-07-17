@@ -18,13 +18,26 @@ ApplicationWindow {
     Dialog {
         id: time_up_dialog
         modal: true
-        visible: false
+        focus: true
         width: 300; height: 200
 
-        Text {
+        x: parent.width / 2 - width / 2
+        y: parent.height / 2 - height / 2
+
+        title: qsTr("Rest Time Over")
+
+        standardButtons: Dialog.Ok
+
+        contentItem: Text {
             id: text
             text: qsTr("Time up!")
             anchors.centerIn: parent
+        }
+
+        onAccepted: {
+            work_timer.state = "Working"
+            clock_tick.start()
+            close()
         }
     }
 
@@ -80,8 +93,8 @@ ApplicationWindow {
 
                     if(work_timer.restSeconds <= 0)
                     {
-                        console.log("Time up!")
-                        work_timer.state = "Working"
+                        clock_tick.stop();
+                        time_up_dialog.open();
                     }
                 }
             }
