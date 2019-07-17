@@ -46,6 +46,59 @@ ApplicationWindow {
         }
     }
 
+    // 1 second timer to keep track of the passage of time
+    Timer {
+        id: clock_tick
+
+        // 1 sec interval
+        interval: 1000
+
+        // default to not running; repeat the timer
+        running: false
+        repeat: true
+
+        // Once the timer ticks...
+        onTriggered: {
+            // If we're in the working state...
+            if(work_timer.state == "Working")
+            {
+                // Add one to both totalSeconds and accruedSeconds
+                work_timer.totalSeconds++
+                work_timer.accruedSeconds++
+
+                // Calculate the number of restSeconds allotted based on the current ratio and the accrued seconds
+                work_timer.restSeconds = Math.floor(work_timer.accruedSeconds * work_timer.ratio)
+
+                // send out a debug message
+                console.log("Clock ticked while working! Total seconds: " + work_timer.totalSeconds)
+
+                // update the text on both the timers
+                work_timer.text = TimeFormatting.timeFormatting(work_timer.totalSeconds)
+                rest_timer.text = TimeFormatting.timeFormatting(work_timer.restSeconds)
+            }
+            else    // Otherwise...
+            {
+                // decrement the rest seconds by one
+                work_timer.restSeconds--
+
+                // send out a debug message
+                console.log("Clock ticked while resting! Accrued seconds left: " + work_timer.restSeconds)
+
+                // update the rest timer text
+                rest_timer.text = TimeFormatting.timeFormatting(work_timer.restSeconds)
+
+                // if we've run out of rest time...
+                if(work_timer.restSeconds <= 0)
+                {
+                    // stop the clock tick for the time being
+                    clock_tick.stop();
+                    // pop up a dialog that says that the user has run out of rest time
+                    time_up_dialog.open();
+                }
+            }
+        }
+    }
+
     // Label for the work timer
     Text {
         id: work_label
@@ -76,60 +129,6 @@ ApplicationWindow {
 
         // aliased property grabs the ratio selected by the user
         property alias ratio: ratio_selector.chosen_ratio
-
-        // 1 second timer to keep track of the passage of time
-        // TODO extract this; it doesn't need to belong to work_timer.
-        Timer {
-            id: clock_tick
-
-            // 1 sec interval
-            interval: 1000
-
-            // default to not running; repeat the timer
-            running: false
-            repeat: true
-
-            // Once the timer ticks...
-            onTriggered: {
-                // If we're in the working state...
-                if(work_timer.state == "Working")
-                {
-                    // Add one to both totalSeconds and accruedSeconds
-                    work_timer.totalSeconds++
-                    work_timer.accruedSeconds++
-
-                    // Calculate the number of restSeconds allotted based on the current ratio and the accrued seconds
-                    work_timer.restSeconds = Math.floor(work_timer.accruedSeconds * work_timer.ratio)
-
-                    // send out a debug message
-                    console.log("Clock ticked while working! Total seconds: " + work_timer.totalSeconds)
-
-                    // update the text on both the timers
-                    work_timer.text = TimeFormatting.timeFormatting(work_timer.totalSeconds)
-                    rest_timer.text = TimeFormatting.timeFormatting(work_timer.restSeconds)
-                }
-                else    // Otherwise...
-                {
-                    // decrement the rest seconds by one
-                    work_timer.restSeconds--
-
-                    // send out a debug message
-                    console.log("Clock ticked while resting! Accrued seconds left: " + work_timer.restSeconds)
-
-                    // update the rest timer text
-                    rest_timer.text = TimeFormatting.timeFormatting(work_timer.restSeconds)
-
-                    // if we've run out of rest time...
-                    if(work_timer.restSeconds <= 0)
-                    {
-                        // stop the clock tick for the time being
-                        clock_tick.stop();
-                        // pop up a dialog that says that the user has run out of rest time
-                        time_up_dialog.open();
-                    }
-                }
-            }
-        }
 
         // States
         states: [
