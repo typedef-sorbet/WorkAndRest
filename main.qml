@@ -345,6 +345,38 @@ ApplicationWindow {
         }
     }
 
+    Text {
+        id: ratio_num_label
+
+        text: "Time working"
+        font.pointSize: 8
+
+        anchors.horizontalCenter: ratio_selector_num.horizontalCenter
+        anchors.top: ratio_selector_num.bottom
+
+    }
+
+    Text {
+        id: ratio_delimiter_label
+
+        text: "to"
+        font.pointSize: 8
+
+        anchors.horizontalCenter: ratio_delimiter.horizontalCenter
+        anchors.verticalCenter: ratio_num_label.verticalCenter
+    }
+
+    Text {
+        id: ratio_denom_label
+
+        text: "time resting"
+        font.pointSize: 8
+
+        anchors.horizontalCenter: ratio_selector_denom.horizontalCenter
+        anchors.top: ratio_selector_denom.bottom
+
+    }
+
     // Button to switch between Working and Resting
     RoundButton {
         id: switch_button
