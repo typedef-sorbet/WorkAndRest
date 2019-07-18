@@ -10,8 +10,8 @@ ApplicationWindow {
 
     // Formatting
     visible: true
-    width: 400
-    height: 300
+    width: 400; minimumWidth: 400; maximumWidth: 400
+    height: 300; minimumHeight: 300; maximumHeight: 300
     title: qsTr("Work Timer")
 
     color: "lightgrey"
@@ -130,7 +130,7 @@ ApplicationWindow {
         property int restSeconds
 
         // aliased property grabs the ratio selected by the user
-        property alias ratio: ratio_selector.chosen_ratio
+        property double ratio: 1.0
 
         // States
         states: [
@@ -189,59 +189,112 @@ ApplicationWindow {
         // All the logic for accrued rest time happens in work_timer. See above.
     }
 
-    // Label for the work ratio ComboBox.
-    Text {
-        id: ratio_label
-        font.pointSize: 16
-        text: "Ratio (work to rest)"
-
-        anchors.horizontalCenter: rest_label.horizontalCenter
-        anchors.verticalCenter: ratio_selector.verticalCenter
-    }
-
     // ComboBox for selecting the desired ratio between work time and rest time.
     ComboBox {
-        id: ratio_selector
+        id: ratio_selector_num
 
         // default to 1/1
         currentIndex: 0
 
         // formatting
-        width: 100
+        width: 75
         anchors.margins: 15
         anchors.topMargin: 30
-        anchors.top: rest_timer.bottom
-        anchors.horizontalCenter: rest_timer.horizontalCenter
+        anchors.right: ratio_delimiter.left
+        anchors.verticalCenter: ratio_delimiter.verticalCenter
+
+        function getSelectionAsInt()
+        {
+            return parseInt(ratio_list_num.get(ratio_selector_num.currentIndex).text)
+        }
 
         // store chosen ratio as a double
         property double chosen_ratio: 1
 
         // list of available ratios
         model: ListModel {
-            id: ratio_list
-            ListElement { text: "1/1" }
-            ListElement { text: "2/1" }
-            ListElement { text: "3/1" }
-            ListElement { text: "4/1" }
-            ListElement { text: "5/1" }
-            ListElement { text: "3/2" }
-            ListElement { text: "4/3" }
-            ListElement { text: "5/4" }
+            id: ratio_list_num
+            ListElement { text: "1" }
+            ListElement { text: "2" }
+            ListElement { text: "3" }
+            ListElement { text: "4" }
+            ListElement { text: "5" }
+            ListElement { text: "6" }
+            ListElement { text: "7" }
+            ListElement { text: "8" }
+            ListElement { text: "9" }
+            ListElement { text: "10" }
         }
 
         // If the ratio is changed...
         onCurrentIndexChanged: {
-            // send out a debug message
-            console.log("Ratio changed to " + ratio_list.get(currentIndex).text)
-
             // change the currently chosen ratio
-            chosen_ratio = eval("1 / (" + ratio_list.get(currentIndex).text + ")")
+            work_timer.ratio = ratio_selector_denom.getSelectionAsInt() / ratio_selector_num.getSelectionAsInt()
 
-            // Yes, I know that is *technically* dangerous. However, in this context, I don't see how this can be abused outside of the user creating their own list elements.
-            // And even then, this command is only going to run on their machine. Whatever malicious things they may be able to do here will be self-inflicted.
+            // send out a debug message
+            console.log("Ratio changed to " + work_timer.ratio)
 
             // update the rest_seconds to reflect the new ratio *immediately* (don't wait for the next clock tick)
-            work_timer.restSeconds = Math.floor(chosen_ratio * work_timer.accruedSeconds)
+            work_timer.restSeconds = Math.floor(work_timer.ratio * work_timer.accruedSeconds)
+        }
+    }
+
+    Text {
+        id: ratio_delimiter
+        text: ":"
+
+        font.pointSize: 8
+        anchors.topMargin: 30
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: rest_timer.bottom
+    }
+
+    ComboBox {
+        id: ratio_selector_denom
+
+        // default to 1/1
+        currentIndex: 0
+
+        // formatting
+        width: 75
+        anchors.margins: 15
+        anchors.topMargin: 30
+        anchors.left: ratio_delimiter.right
+        anchors.verticalCenter: ratio_delimiter.verticalCenter
+
+        // store chosen ratio as a double
+        property double chosen_ratio: 1
+
+        function getSelectionAsInt()
+        {
+            return parseInt(ratio_list_denom.get(ratio_selector_denom.currentIndex).text)
+        }
+
+        // list of available ratios
+        model: ListModel {
+            id: ratio_list_denom
+            ListElement { text: "1" }
+            ListElement { text: "2" }
+            ListElement { text: "3" }
+            ListElement { text: "4" }
+            ListElement { text: "5" }
+            ListElement { text: "6" }
+            ListElement { text: "7" }
+            ListElement { text: "8" }
+            ListElement { text: "9" }
+            ListElement { text: "10" }
+        }
+
+        // If the ratio is changed...
+        onCurrentIndexChanged: {
+            // change the currently chosen ratio
+            work_timer.ratio = ratio_selector_denom.getSelectionAsInt() / ratio_selector_num.getSelectionAsInt()
+
+            // send out a debug message
+            console.log("Ratio changed to " + work_timer.ratio)
+
+            // update the rest_seconds to reflect the new ratio *immediately* (don't wait for the next clock tick)
+            work_timer.restSeconds = Math.floor(work_timer.ratio * work_timer.accruedSeconds)
         }
     }
 
@@ -251,7 +304,7 @@ ApplicationWindow {
 
         // Formatting
         anchors.margins: 20
-        anchors.right: parent.horizontalCenter
+        x: parent.width / 2 - width - anchors.margins / 2
         anchors.bottom: parent.bottom
         height: 50; width: 50
         font.family: "Material Design Icons"
