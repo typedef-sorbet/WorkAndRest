@@ -291,7 +291,7 @@ ApplicationWindow {
         text: ":"
 
         font.pointSize: 8
-        anchors.topMargin: 30
+        anchors.topMargin: 35
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: rest_timer.bottom
     }
