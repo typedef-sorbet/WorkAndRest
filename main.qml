@@ -106,6 +106,7 @@ ApplicationWindow {
         text: "Work Timer"
 
         anchors.margins: 15
+        anchors.leftMargin: 30
         anchors.left: parent.left
         anchors.verticalCenter: work_timer.verticalCenter
     }
@@ -118,6 +119,7 @@ ApplicationWindow {
         text: "00:00"
 
         anchors.margins: 15
+        anchors.rightMargin: 30
         anchors.right: parent.right
 
         // store the number of seconds worked (for display purposes),
@@ -168,6 +170,7 @@ ApplicationWindow {
         text: "Rest Timer"
 
         anchors.margins: 15
+        anchors.leftMargin: 30
         anchors.verticalCenter: rest_timer.verticalCenter
         anchors.horizontalCenter: work_label.horizontalCenter
     }
@@ -179,6 +182,7 @@ ApplicationWindow {
         text: "00:00"
 
         anchors.margins: 15
+        anchors.rightMargin: 30
         anchors.right: parent.right
         anchors.top: work_timer.bottom
 
