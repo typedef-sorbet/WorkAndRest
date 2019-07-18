@@ -16,6 +16,49 @@ ApplicationWindow {
 
     color: "lightgrey"
 
+    Rectangle {
+        id: highlighter
+
+        color: "grey"
+
+        signal swapPlaces()
+
+        width: parent.width
+        height: work_timer.height + 15
+
+        anchors.top: work_timer.top
+
+        onSwapPlaces: {
+            if(state == "WorkingPos")
+            {
+                state = "RestingPos"
+            }
+            else
+            {
+                state = "WorkingPos"
+            }
+        }
+
+        states: [
+            State {
+                name: "RestingPos"
+                PropertyChanges {
+                    target: highlighter
+                    anchors.top: rest_timer.top
+                }
+            },
+            State {
+                name: "WorkingPos"
+                PropertyChanges {
+                    target: highlighter
+                    anchors.top: work_timer.top
+                }
+            }
+        ]
+
+        state: "WorkingPos"
+    }
+
     // time_up_dialog: Dialog that appears when the rest timer has depleted
     Dialog {
         id: time_up_dialog
@@ -78,23 +121,27 @@ ApplicationWindow {
             }
             else    // Otherwise...
             {
-                // decrement the rest seconds by one
-                work_timer.restSeconds--
-
-                // send out a debug message
-                console.log("Clock ticked while resting! Accrued seconds left: " + work_timer.restSeconds)
-
-                // update the rest timer text
-                rest_timer.text = TimeFormatting.timeFormatting(work_timer.restSeconds)
-
                 // if we've run out of rest time...
                 if(work_timer.restSeconds <= 0)
                 {
                     // stop the clock tick for the time being
-                    clock_tick.stop();
+                    clock_tick.stop()
                     // pop up a dialog that says that the user has run out of rest time
-                    time_up_dialog.open();
+                    time_up_dialog.open()
                 }
+                else
+                {
+                    // decrement the rest seconds by one
+                    work_timer.restSeconds--
+
+                    // send out a debug message
+                    console.log("Clock ticked while resting! Accrued seconds left: " + work_timer.restSeconds)
+
+                    // update the rest timer text
+                    rest_timer.text = TimeFormatting.timeFormatting(work_timer.restSeconds)
+                }
+
+
             }
         }
     }
@@ -103,7 +150,7 @@ ApplicationWindow {
     Text {
         id: work_label
         font.pointSize: 24
-        text: "Work Timer"
+        text: "Work Time"
 
         anchors.margins: 15
         anchors.leftMargin: 30
@@ -167,7 +214,7 @@ ApplicationWindow {
     Text {
         id: rest_label
         font.pointSize: 24
-        text: "Rest Timer"
+        text: "Rest Time"
 
         anchors.margins: 15
         anchors.leftMargin: 30
@@ -323,7 +370,9 @@ ApplicationWindow {
                 work_timer.state = "Working"
             }
 
+            highlighter.swapPlaces()
         }
+
     }
 
     // Button to pause and unpause the timer
