@@ -104,6 +104,7 @@ ApplicationWindow {
         // when accepted, change work_timer's state, start the clock tick, and close the dialog
         onAccepted: {
             work_timer.state = "Working"
+            highlighter.state = "WorkingPos"
             clock_tick.start()
             close()
         }
@@ -253,7 +254,7 @@ ApplicationWindow {
         anchors.right: parent.right
         anchors.top: work_timer.bottom
 
-        // All the logic for accrued rest time happens in work_timer. See above.
+        // All the logic for accrued rest time happens in clock_tick. See above.
     }
 
     // ComboBox for selecting the desired ratio between work time and rest time.
