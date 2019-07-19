@@ -42,18 +42,38 @@ ApplicationWindow {
         states: [
             State {
                 name: "RestingPos"
-                PropertyChanges {
+                AnchorChanges {
                     target: highlighter
                     anchors.top: rest_timer.top
                 }
             },
             State {
                 name: "WorkingPos"
-                PropertyChanges {
+                AnchorChanges {
                     target: highlighter
-                    anchors.top: work_timer.top
+                    anchors.top: window.top
                 }
             }
+        ]
+
+        transitions: [
+            Transition {
+                from: "WorkingPos"
+                to: "RestingPos"
+                AnchorAnimation {
+                    duration: 150
+                    easing.type: Easing.InOutQuad
+                }
+            },
+            Transition {
+                from: "RestingPos"
+                to: "WorkingPos"
+                AnchorAnimation {
+                    duration: 150
+                    easing.type: Easing.InOutQuad
+                }
+            }
+
         ]
 
         state: "WorkingPos"
