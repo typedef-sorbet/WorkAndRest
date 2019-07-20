@@ -5,6 +5,7 @@ import QtQuick.Window 2.11
 import "Icon.js" as MdiFont
 import "TimeFormatting.js" as TimeFormatting
 
+// Main window of the application.
 ApplicationWindow {
     id: window
 
@@ -13,22 +14,20 @@ ApplicationWindow {
     width: 400; minimumWidth: 400; maximumWidth: 400
     height: 300; minimumHeight: 300; maximumHeight: 300
     title: qsTr("Work Timer")
-
     color: "lightgrey"
 
+    // Rectangle that highlights the active timer in grey
     Rectangle {
         id: highlighter
 
-        color: "grey"
-
-        signal swapPlaces()
-
+        // Formatting
         width: parent.width
         height: work_timer.height + 15
-
         anchors.top: work_timer.top
+        color: "grey"
 
-        onSwapPlaces: {
+        // function to change states (i.e. change positions)
+        function swapPlaces() {
             if(state == "WorkingPos")
             {
                 state = "RestingPos"
@@ -39,23 +38,35 @@ ApplicationWindow {
             }
         }
 
+        // denotes the two states of the highlighter: hovering over the rest timer, and hovering over the work timer
         states: [
-            State {
+            State {                     // RestingPos anchors the top of the rectangle to the top of the rest timer text box
                 name: "RestingPos"
-                PropertyChanges {
+                AnchorChanges {
                     target: highlighter
                     anchors.top: rest_timer.top
                 }
             },
-            State {
+            State {                     // WorkingPos anchors the top of the rectangle to the top of the window (effectively the same as the top of the work timer)
                 name: "WorkingPos"
-                PropertyChanges {
+                AnchorChanges {
                     target: highlighter
-                    anchors.top: work_timer.top
+                    anchors.top: window.top
                 }
             }
         ]
 
+        // Denotes the animations that occur between state changes (mainly for easing the rectangle between the two positions)
+        transitions: [
+            Transition {
+                AnchorAnimation {
+                    duration: 150
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        ]
+
+        // Default to hovering over the work timer
         state: "WorkingPos"
     }
 
@@ -81,9 +92,10 @@ ApplicationWindow {
             anchors.centerIn: parent
         }
 
-        // when accepted, change work_timer's state, start the clock tick, and close the dialog
+        // when accepted, change work_timer's and highlighter's state, start the clock tick, and close the dialog
         onAccepted: {
             work_timer.state = "Working"
+            highlighter.state = "WorkingPos"
             clock_tick.start()
             close()
         }
@@ -100,7 +112,7 @@ ApplicationWindow {
         running: false
         repeat: true
 
-        // Once the timer ticks...
+        // When the timer ticks...
         onTriggered: {
             // If we're in the working state...
             if(work_timer.state == "Working")
@@ -140,8 +152,6 @@ ApplicationWindow {
                     // update the rest timer text
                     rest_timer.text = TimeFormatting.timeFormatting(work_timer.restSeconds)
                 }
-
-
             }
         }
     }
@@ -149,9 +159,10 @@ ApplicationWindow {
     // Label for the work timer
     Text {
         id: work_label
+
+        // Formatting
         font.pointSize: 24
         text: "Work Time"
-
         anchors.margins: 15
         anchors.leftMargin: 30
         anchors.left: parent.left
@@ -162,9 +173,10 @@ ApplicationWindow {
     // Shows the amount of time the user has spent working.
     Text {
         id: work_timer
+
+        // Formatting
         font.pointSize: 32
         text: "00:00"
-
         anchors.margins: 15
         anchors.rightMargin: 30
         anchors.right: parent.right
@@ -176,10 +188,12 @@ ApplicationWindow {
         property int accruedSeconds
         property int restSeconds
 
-        // aliased property grabs the ratio selected by the user
+        // store the ratio that was selected by the user (set by ratio_selector_num and ratio_selector_denom)
         property double ratio: 1.0
 
         // States
+        // Handles the overall state for both work_timer and rest_timer
+        // This timer is effectively the "master" timer
         states: [
             State {
                 id: working_state
@@ -196,7 +210,7 @@ ApplicationWindow {
 
         // If we've changed states...
         onStateChanged: {
-            // ...and we're working...
+            // ...and we're about to start working...
             if(state == "Working")
             {
                 // ...backfill accruedSeconds with the appropriate amount of seconds it would take to accrue the remaining restSeconds
@@ -205,7 +219,7 @@ ApplicationWindow {
                 // If I were to backfill totalSeconds using this logic, it could potentially desynch the timer text with the amount of time that has actually passed.
                 // Doing it this way still creates some inaccuracy between the amount of time accrued to rest and the amount of time worked, but keep[s the information that is displayed
                 // in check with the total amount of time that has passed.
-                // I think, anyway. Maybe this is my crackhead brain doing some weird somersaults or something. :/
+                // I think, anyway.
             }
         }
     }
@@ -213,9 +227,10 @@ ApplicationWindow {
     // Label for the rest timer
     Text {
         id: rest_label
+
+        // Formatting
         font.pointSize: 24
         text: "Rest Time"
-
         anchors.margins: 15
         anchors.leftMargin: 30
         anchors.verticalCenter: rest_timer.verticalCenter
@@ -223,42 +238,43 @@ ApplicationWindow {
     }
 
     // The rest timer
+    // No timer logic here, text updates handled by work_timer and clock_tick.
     Text {
         id: rest_timer
+
+        // Formatting
         font.pointSize: 32
         text: "00:00"
-
         anchors.margins: 15
         anchors.rightMargin: 30
         anchors.right: parent.right
         anchors.top: work_timer.bottom
 
-        // All the logic for accrued rest time happens in work_timer. See above.
+        // All the logic for accrued rest time happens in clock_tick. See above.
     }
 
     // ComboBox for selecting the desired ratio between work time and rest time.
     ComboBox {
         id: ratio_selector_num
 
-        // default to 1/1
+        // default to 1
         currentIndex: 0
 
-        // formatting
+        // Formatting
         width: 75
         anchors.margins: 15
         anchors.topMargin: 30
         anchors.right: ratio_delimiter.left
         anchors.verticalCenter: ratio_delimiter.verticalCenter
 
+        // Returns the integer contained within the current selection.
         function getSelectionAsInt()
         {
             return parseInt(ratio_list_num.get(ratio_selector_num.currentIndex).text)
         }
 
-        // store chosen ratio as a double
-        property double chosen_ratio: 1
-
         // list of available ratios
+        // TODO add a value field to each element se that we don't have to do string parsing
         model: ListModel {
             id: ratio_list_num
             ListElement { text: "1" }
@@ -286,20 +302,23 @@ ApplicationWindow {
         }
     }
 
+    // Text between the two ComboBoxes.
     Text {
         id: ratio_delimiter
-        text: ":"
 
+        // Formatting
+        text: ":"
         font.pointSize: 8
         anchors.topMargin: 35
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: rest_timer.bottom
     }
 
+    // ComboBox for selecting the desired ratio between work time and rest time.
     ComboBox {
         id: ratio_selector_denom
 
-        // default to 1/1
+        // default to 1
         currentIndex: 0
 
         // formatting
@@ -309,15 +328,14 @@ ApplicationWindow {
         anchors.left: ratio_delimiter.right
         anchors.verticalCenter: ratio_delimiter.verticalCenter
 
-        // store chosen ratio as a double
-        property double chosen_ratio: 1
-
+        // Returns the integer contained within the current selection.
         function getSelectionAsInt()
         {
             return parseInt(ratio_list_denom.get(ratio_selector_denom.currentIndex).text)
         }
 
         // list of available ratios
+        // TODO add a value field to each element se that we don't have to do string parsing
         model: ListModel {
             id: ratio_list_denom
             ListElement { text: "1" }
@@ -345,36 +363,37 @@ ApplicationWindow {
         }
     }
 
+    // Label underneath the numerator ComboBox.
     Text {
         id: ratio_num_label
 
+        // Formatting
         text: "Time working"
         font.pointSize: 8
-
         anchors.horizontalCenter: ratio_selector_num.horizontalCenter
         anchors.top: ratio_selector_num.bottom
-
     }
 
+    // Label underneath the ratio delimiter label.
     Text {
         id: ratio_delimiter_label
 
+        // Formatting
         text: "to"
         font.pointSize: 8
-
         anchors.horizontalCenter: ratio_delimiter.horizontalCenter
         anchors.verticalCenter: ratio_num_label.verticalCenter
     }
 
+    // Label underneath the denominator ComboBox.
     Text {
         id: ratio_denom_label
 
+        // Formatting
         text: "time resting"
         font.pointSize: 8
-
         anchors.horizontalCenter: ratio_selector_denom.horizontalCenter
         anchors.top: ratio_selector_denom.bottom
-
     }
 
     // Button to switch between Working and Resting
@@ -391,7 +410,7 @@ ApplicationWindow {
         text: MdiFont.Icon.cached   // Circular "repeat"-like symbol, similar to the retweet symbol
         opacity: 0.80
 
-        // Toggle work_timer.state on press
+        // Toggle work_timer.state on press, and move the highlighter box
         onPressed: {
             if(work_timer.state == "Working")
             {
